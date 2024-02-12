@@ -116,7 +116,7 @@ let node2 = new CryptoBlockchain();
 camacCoinNetwork.addNode(node1);
 camacCoinNetwork.addNode(node2);
 
-// Simulate wallets (In a real scenario, these would be more complex and secure)
+// Simulate wallets
 let walletA = "walletAddressA";
 let walletB = "walletAddressB";
 
@@ -124,19 +124,16 @@ let walletB = "walletAddressB";
 let transaction1 = new Transaction(walletA, walletB, 10);
 let transaction2 = new Transaction(walletB, walletA, 5);
 
-// Add a new block to the first blockchain
+// Add a new block to the first node
 node1.addNewBlock(new CryptoBlock(node1.blockchain.length, Date.now().toString(), [transaction1, transaction2]));
 
-// Broadcast this new block to all nodes in the network (simplified simulation)
+// Broadcast this new block to all nodes in the network
 camacCoinNetwork.broadcastLatestBlock(node1.obtainLatestBlock());
 
-// Simulate mining/proof of work for the new blocks in all nodes
-node2.addNewBlock(new CryptoBlock(node2.blockchain.length, Date.now().toString(), [transaction1]));
-
-// Check the state of each blockchain
+// Check the state of each node
 console.log("node1:", JSON.stringify(node1, null, 4));
 console.log("node2:", JSON.stringify(node2, null, 4));
 
-// Check if the blockchain is valid
+// Check if the node is valid
 console.log("node1 is valid:", node1.checkChainValidity());
 console.log("node2: is valid:", node2.checkChainValidity());
