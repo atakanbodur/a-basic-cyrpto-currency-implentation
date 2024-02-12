@@ -1,17 +1,19 @@
 //sources: https://www.smashingmagazine.com/2020/02/cryptocurrency-blockchain-node-js/
-
 const SHA256 = require('crypto-js/sha256');
 
+class Transaction {
+    constructor(fromAddress, toAddress, amount) {
+        this.fromAddress = fromAddress;
+        this.toAddress = toAddress;
+        this.amount = amount;
+    }
+}
+
 class CryptoBlock{
-    constructor(index, timestamp, data, precedingHash=" "){
-        // unique number that tracks the position of every block in the entire blockchain
+    constructor(index, timestamp, transactions, precedingHash = " ") {
         this.index = index;
-        // record of the time of occurrence of each completed transaction
         this.timestamp = timestamp;
-        // data about the completed transactions
-        // sender details, recipient’s details, and quantity transacted
-        this.data = data;
-        //points to the hash of the preceding block in the blockchain
+        this.transactions = transactions; // Array of Transaction objects
         this.precedingHash = precedingHash;
         this.hash = this.computeHash();
         this.nonce = 0;
@@ -22,7 +24,7 @@ class CryptoBlock{
             this.index +
             this.precedingHash +
             this.timestamp +
-            JSON.stringify(this.data) +
+            JSON.stringify(this.transactions) +
             this.nonce
         ).toString();
     }
@@ -49,7 +51,7 @@ class CryptoBlock{
 class CryptoBlockchain{
     constructor(){
         this.blockchain = [this.startGenesisBlock()];
-        this.difficulty = 5;
+        this.difficulty = 1;
     }
 
     // In the case of this initial block, it does not have any preceding block to point to.
@@ -85,34 +87,56 @@ class CryptoBlockchain{
 
 }
 
-let camacCoin = new CryptoBlockchain();
+class BlockchainNetwork {
+    constructor() {
+        this.nodes = [];
+    }
 
-if (camacCoin.checkChainValidity()) {
-    console.log("Blockchain is valid. Proceeding with operations.");
+    addNode(blockchain) {
+        this.nodes.push(blockchain);
+    }
+
+    broadcastLatestBlock(newBlock) {
+        this.nodes.forEach(node => {
+            if (node.blockchain[node.blockchain.length - 1].hash !== newBlock.hash) {
+                node.addNewBlock(newBlock);
+            }
+        });
+    }
 }
-else {
-    console.error("Blockchain integrity compromised! Halting operations.");
-}
 
 
-console.log("camacCoin start: " + new Date().toString());
+// Initialize a simple blockchain network
+let camacCoinNetwork = new BlockchainNetwork();
 
-camacCoin.addNewBlock(
-    new CryptoBlock(1, "01/06/2024", {
-        sender: "Iris Ljesnjanin",
-        recipient: "Cosima Mielke",
-        quantity: 50
-    })
-);
+// Create two nodes and add them to the network
+let node1 = new CryptoBlockchain();
+let node2 = new CryptoBlockchain();
 
-camacCoin.addNewBlock(
-    new CryptoBlock(2, "01/07/2024", {
-        sender: "Vitaly Friedman",
-        recipient: "Ricardo Gimenes",
-        quantity: 100
-    })
-);
+camacCoinNetwork.addNode(node1);
+camacCoinNetwork.addNode(node2);
 
-console.log("camacCoin end: " + new Date().toString());
+// Simulate wallets (In a real scenario, these would be more complex and secure)
+let walletA = "walletAddressA";
+let walletB = "walletAddressB";
 
-console.log(JSON.stringify(camacCoin, null, 4));
+// Create transactions
+let transaction1 = new Transaction(walletA, walletB, 10);
+let transaction2 = new Transaction(walletB, walletA, 5);
+
+// Add a new block to the first blockchain
+node1.addNewBlock(new CryptoBlock(node1.blockchain.length, Date.now().toString(), [transaction1, transaction2]));
+
+// Broadcast this new block to all nodes in the network (simplified simulation)
+camacCoinNetwork.broadcastLatestBlock(node1.obtainLatestBlock());
+
+// Simulate mining/proof of work for the new blocks in all nodes
+node2.addNewBlock(new CryptoBlock(node2.blockchain.length, Date.now().toString(), [transaction1]));
+
+// Check the state of each blockchain
+console.log("node1:", JSON.stringify(node1, null, 4));
+console.log("node2:", JSON.stringify(node2, null, 4));
+
+// Check if the blockchain is valid
+console.log("node1 is valid:", node1.checkChainValidity());
+console.log("node2: is valid:", node2.checkChainValidity());
